@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Menu des Posters - Studio Lab - Premium Edition</title>
+    <!-- Importation de polices haut de gamme -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+           1. Variables & Design System
+        ========================================= */
+        :root {
+            --color-bg-deep: #000c1d; 
+            --color-bg-glow: #001a35; 
+            --color-accent-blue: #00d2ff;
+            --color-accent-gold: #ffcc33;
+            --color-glass: rgba(255, 255, 255, 0.05);
+            --color-glass-border: rgba(255, 255, 255, 0.15);
+            --transition-premium: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, var(--color-bg-glow) 0%, var(--color-bg-deep) 100%);
+            font-family: var(--font-main);
+            color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* =========================================
+           2. Background & Atmosphere
+        ========================================= */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.8;
+            transition: filter 1s ease;
+        }
+
+        body.modal-active #particle-canvas,
+        body.modal-active #network-wrapper,
+        body.modal-active #logo-institution,
+        body.modal-active .tech-icon {
+            filter: blur(15px) brightness(0.4);
+            pointer-events: none;
+        }
+
+        .tech-icon {
+            position: absolute;
+            width: clamp(60px, 10vw, 120px); 
+            height: clamp(60px, 10vw, 120px);
+            pointer-events: none;
+            opacity: 0.08; 
+            z-index: 2; 
+            fill: #ffffff;
+            filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.5));
+            transition: var(--transition-premium), opacity 0.5s ease;
+        }
+
+        #icon-camera { top: 12%; left: 82%; }    
+        #icon-mic { top: 58%; left: 8%; }       
+        #icon-monitor { top: 82%; left: 18%; }   
+        #icon-gamepad { top: 78%; left: 82%; }   
+        #icon-ia { top: 35%; left: 88%; }
+
+        @media (max-width: 768px) {
+            .tech-icon { opacity: 0.05; }
+            #icon-camera { top: 8%; left: 70%; }
+            #icon-mic { top: 82%; left: 10%; }
+            #icon-monitor { top: 88%; left: 45%; }
+            #icon-gamepad { top: 12%; left: 15%; }
+            #icon-ia { top: 40%; left: 80%; }
+        }
+
+        /* =========================================
+           3. Network Layout
+        ========================================= */
+        #network-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #network-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #logo-institution {
+            position: absolute;
+            top: clamp(20px, 4vh, 40px);
+            left: clamp(20px, 4vw, 50px);
+            width: clamp(160px, 22vw, 300px);
+            max-height: 110px;
+            object-fit: contain;
+            object-position: left center;
+            pointer-events: none; 
+            z-index: 50; 
+            mix-blend-mode: screen;
+            filter: invert(1) brightness(1.8) contrast(1.1);
+            opacity: 0.85;
+        }
+
+        /* =========================================
+           4. Interactive Nodes (Symmetry Fixed)
+        ========================================= */
+        .node {
+            position: absolute;
+            cursor: pointer;
+            border-radius: 50%;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transform: translate(-50%, -50%); /* Centrage absolu */
+        }
+
+        #logo-center {
+            width: clamp(150px, 24vw, 240px); 
+            height: clamp(150px, 24vw, 240px); 
+            background: #ffffff; 
+            border: 4px solid var(--color-accent-gold); 
+            box-shadow: 
+                0 25px 60px rgba(0, 0, 0, 0.7),
+                0 0 50px rgba(255, 204, 51, 0.4); 
+            z-index: 35; 
+            top: 50%;
+            left: 50%;
+        }
+
+        #logo-center img {
+            max-width: 75%; 
+            max-height: 75%;
+            object-fit: contain;
+        }
+
+        .cell-node {
+            width: clamp(105px, 16vw, 150px);
+            height: clamp(105px, 16vw, 150px);
+            background: var(--color-glass);
+            border: 1.5px solid var(--color-glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            color: #ffffff;
+            text-align: center;
+            font-size: clamp(0.75rem, 1.1vw, 0.92rem);
+            line-height: 1.4;
+            padding: 12px;
+            font-weight: 500;
+            z-index: 20;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .cell-node span {
+            display: -webkit-box;
+            -webkit-line-clamp: 5; 
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+        }
+
+        .cell-node.hovered {
+            z-index: 45;
+            border: 2px solid var(--color-accent-blue);
+            background: rgba(0, 210, 255, 0.2); 
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.6),
+                0 0 40px rgba(0, 210, 255, 0.6);
+            color: #fff;
+            transform: translate(-50%, -50%) scale(1.1) !important;
+        }
+
+        #connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5; 
+            pointer-events: none;
+            filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.4)); 
+        }
+
+        .connection-line {
+            stroke: rgba(0, 210, 255, 0.45); 
+            stroke-width: 1.8; 
+            stroke-dasharray: 8, 10;
+            opacity: 0.8;
+        }
+
+        /* =========================================
+           5. Premium Modal
+        ========================================= */
+        #poster-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 5, 15, 0.4);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            z-index: 200;
+        }
+
+        #poster-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        #poster-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        #poster-content {
+            max-width: 90%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 20px;
+            box-shadow: 0 50px 150px rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: auto;
+            transform: scale(0.6) rotateX(15deg) translateY(40px);
+            opacity: 0;
+            filter: blur(20px);
+            transition: var(--transition-premium);
+        }
+
+        #poster-overlay.active #poster-content {
+            transform: scale(1) rotateX(0) translateY(0);
+            opacity: 1;
+            filter: blur(0);
+        }
+
+        #close-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            font-size: 2.4rem;
+            transition: var(--transition-premium);
+            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 210;
+            pointer-events: auto;
+        }
+
+        #close-btn:hover {
+            transform: rotate(90deg) scale(1.1);
+            background: var(--color-accent-gold);
+            color: #000;
+        }
+
+        #poster-caption {
+            margin-top: 40px;
+            font-size: clamp(1.2rem, 5vw, 2rem);
+            color: #fff;
+            font-weight: 700;
+            text-align: center;
+            max-width: 80%;
+            text-shadow: 0 5px 25px rgba(0,0,0,0.7);
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition-premium);
+            transition-delay: 0.3s;
+        }
+
+        #poster-overlay.active #poster-caption {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+    
+    <svg id="icon-camera" class="tech-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15 8v8H5V8h10m1-2H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4V7c0-.55-.45-1-1-1z"/></svg>
+    <svg id="icon-mic" class="tech-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3m7 9h-2c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92z"/></svg>
+    <svg id="icon-monitor" class="tech-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 16H3V4h18v12m0-14H3c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h7v2H8v2h8v-2h-2v-2h7a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+    <svg id="icon-gamepad" class="tech-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h4l2-2h6l2 2h4c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+    <svg id="icon-ia" class="tech-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"/></svg>
+    
+    <div id="network-wrapper">
+        <div id="network-content">
+            <svg id="connections-svg"></svg>
+            <div id="logo-center" class="node" onclick="showPoster('presentation')">
+                <img src="logo1.png" alt="Logo Studio Lab">
+            </div>
+            <div id="cell-nodes"></div>
+        </div>
+    </div>
+
+    <img id="logo-institution" src="logo2.png" alt="Logo Établissement">
+
+    <div id="poster-overlay">
+        <span id="close-btn">&times;</span>
+        <div id="poster-container">
+            <img id="poster-content" src="" alt="Poster">
+            <p id="poster-caption"></p>
+        </div>
+    </div>
+
+    <script>
+        const posterMap = {
+            'presentation': { name: 'Studio Lab', path: 'image_2.png', id: 'logo' },
+            'cell1': { name: 'Accompagnement d’évènements et de clubs universitaires', path: 'image_5.png', id: 'cell1' },
+            'cell2': { name: 'Accompagnement à l’innovation techno-pédagogique', path: 'image_3.png', id: 'cell2' },
+            'cell3': { name: 'Production de ressources audiovisuelles pédagogiques', path: 'image_7.png', id: 'cell3' },
+            'cell4': { name: 'E-learning et ressources collaboratives', path: 'image_4.png', id: 'cell4' },
+            'cell5': { name: 'Production pédagogique assistée par Intelligence Artificielle', path: 'image_6.png', id: 'cell5' },
+            'cell6': { name: 'Expression artistique et médias créatives', path: 'image_8.png', id: 'cell6' },
+            'cell7': { name: 'Technologies immersives et serious gaming', path: 'image_9.png', id: 'cell7' },
+            'cell8': { name: 'Robotique pédagogique et ExAO', path: 'image_10.png', id: 'cell8' },
+            'cell9': { name: 'Encadrement et certification en technologies éducatives', path: 'image_11.png', id: 'cell9' }
+        };
+
+        const cellsData = Object.values(posterMap).filter(item => item.id !== 'logo');
+        const numCells = cellsData.length;
+        const cellContainer = document.getElementById('cell-nodes');
+        const connectionsSvg = document.getElementById('connections-svg');
+        
+        cellsData.forEach((cellData, index) => {
+            const cellNode = document.createElement('div');
+            cellNode.className = 'cell-node node';
+            cellNode.id = cellData.id;
+            cellNode.innerHTML = `<span>${cellData.name}</span>`;
+            
+            cellNode.addEventListener('mouseenter', () => highlightNode(cellData.id, true));
+            cellNode.addEventListener('mouseleave', () => highlightNode(cellData.id, false));
+            cellNode.addEventListener('touchstart', (e) => highlightNode(cellData.id, true), {passive: true});
+            cellNode.onclick = () => showPoster(cellData.id);
+            cellContainer.appendChild(cellNode);
+
+            const connectionLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            connectionLine.id = `line-${cellData.id}`;
+            connectionLine.setAttribute('class', 'connection-line');
+            connectionsSvg.appendChild(connectionLine);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (document.body.classList.contains('modal-active')) return;
+            const touch = e.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            cellsData.forEach(c => highlightNode(c.id, false));
+            if (target && target.classList.contains('cell-node')) highlightNode(target.id, true);
+        }, {passive: true});
+
+        function highlightNode(id, active) {
+            const node = document.getElementById(id);
+            const line = document.getElementById(`line-${id}`);
+            if (!node || !line) return;
+            if (active) {
+                node.classList.add('hovered');
+                line.style.stroke = 'var(--color-accent-blue)';
+                line.style.strokeWidth = '3';
+                line.style.strokeDasharray = 'none';
+                line.style.opacity = '1';
+            } else {
+                node.classList.remove('hovered');
+                line.style.stroke = 'rgba(0, 210, 255, 0.45)';
+                line.style.strokeWidth = '1.8';
+                line.style.strokeDasharray = '8, 10';
+                line.style.opacity = '0.8';
+            }
+        }
+
+        let globalAngleOffset = 0;
+        const rotationSpeed = 0.0004; 
+
+        function animateNetwork() {
+            globalAngleOffset += rotationSpeed;
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const isMobile = w < 768;
+            
+            // RAYON FIXE ET SYMETRIQUE
+            const orbitRadius = isMobile ? Math.min(w, h) * 0.42 : Math.min(w, h) * 0.35; 
+            const centerX = w / 2;
+            const centerY = h / 2;
+
+            cellsData.forEach((cellData, index) => {
+                // ANGLE PARFAITEMENT REPARTI
+                const baseAngle = (index / numCells) * Math.PI * 2 + globalAngleOffset;
+                
+                // AUCUNE OSCILLATION POUR GARANTIR LA SYMETRIE PARFAITE
+                const x = Math.cos(baseAngle) * orbitRadius;
+                const y = Math.sin(baseAngle) * orbitRadius;
+
+                const cellNode = document.getElementById(cellData.id);
+                if (cellNode) {
+                    cellNode.style.left = `${centerX + x}px`;
+                    cellNode.style.top = `${centerY + y}px`;
+                }
+
+                const line = document.getElementById(`line-${cellData.id}`);
+                if (line) {
+                    line.setAttribute('x1', centerX);
+                    line.setAttribute('y1', centerY);
+                    line.setAttribute('x2', centerX + x);
+                    line.setAttribute('y2', centerY + y);
+                }
+            });
+
+            requestAnimationFrame(animateNetwork);
+        }
+        animateNetwork();
+
+        const wrapper = document.getElementById('network-wrapper');
+        const instLogo = document.getElementById('logo-institution');
+        document.addEventListener('mousemove', (e) => {
+            if (document.body.classList.contains('modal-active')) return;
+            const mouseX = (e.clientX / window.innerWidth) - 0.5;
+            const mouseY = (e.clientY / window.innerHeight) - 0.5;
+            if(wrapper) wrapper.style.transform = `translate(${mouseX * -25}px, ${mouseY * -25}px)`;
+            if(instLogo) instLogo.style.transform = `translate(${mouseX * 15}px, ${mouseY * 15}px)`;
+        });
+
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const particleCount = window.innerWidth < 768 ? 40 : 80;
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.25,
+                    vy: (Math.random() - 0.5) * 0.25,
+                    radius: Math.random() * 1.5 + 0.5
+                });
+            }
+        }
+        function drawConstellation() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 210, 255, 0.4)';
+                ctx.fill();
+            }
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 160) {
+                        ctx.beginPath();
+                        const opacity = (1 - (distance / 160)) * 0.25;
+                        ctx.strokeStyle = `rgba(0, 210, 255, ${opacity})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(drawConstellation);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        requestAnimationFrame(drawConstellation);
+
+        const overlay = document.getElementById('poster-overlay');
+        const posterContent = document.getElementById('poster-content');
+        const posterCaption = document.getElementById('poster-caption');
+        const closeBtn = document.getElementById('close-btn');
+        function showPoster(cellId) {
+            const data = posterMap[cellId === 'presentation' ? 'presentation' : cellId];
+            if (data) {
+                posterContent.src = data.path;
+                posterCaption.innerText = data.name;
+                document.body.classList.add('modal-active');
+                overlay.classList.add('active');
+            }
+        }
+        function hidePoster() {
+            document.body.classList.remove('modal-active');
+            overlay.classList.remove('active');
+            cellsData.forEach(c => highlightNode(c.id, false));
+        }
+        if(closeBtn) closeBtn.addEventListener('click', (e) => { e.stopPropagation(); hidePoster(); });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) hidePoster(); });
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) hidePoster(); });
+    </script>
+</body>
+</html>
